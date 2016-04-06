@@ -5,6 +5,19 @@
 {% endblock %}
 
 
+
+
 {% block main %}
-I am home.
+Hello, please enter a URL:
+<form method="post" name="thumbForm" action="{{ url_for('showSubmit') }}" >
+    <label for="website">URL:</label>
+    <input type="text" name="website" /><br />
+    
+    <input type="submit" />                
+
+</form>
+<script type="text/javascript">
+    var name = localStorage.setItem('nowUser', "{{nowUser}}");
+    console.log(name);
+</script>
 {% endblock %}

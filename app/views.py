@@ -8,13 +8,13 @@ This file creates your application.
 """
 
 from app import app
-from flask import render_template, request, redirect, url_for,jsonify,g,session
+from flask import render_template, request, redirect, url_for,jsonify,g,session, flash
 from app import db
 
 from flask.ext.wtf import Form 
-from wtforms.fields import TextField # other fields include PasswordField 
+from wtforms import * # other fields include PasswordField 
 from wtforms.validators import Required, Email
-from app.models import Myprofile
+from app.models import myprofile
 from app.forms import LoginForm
 
 from flask.ext.login import login_user, logout_user, current_user, login_required
@@ -22,68 +22,126 @@ from app import app, db, lm, oid
 from app import oid, lm
 
 
+
+import requests
+from bs4 import BeautifulSoup
+import urlparse
+import sys
+import json
+
+
 class ProfileForm(Form):
-     first_name = TextField('First Name', validators=[Required()])
-     last_name = TextField('Last Name', validators=[Required()])
+     name = TextField('First Name', validators=[Required()])
+     email = TextField('Email', validators=[Required()])
+     password = TextField('Password', validators=[Required()])
      
 
 
-@app.before_request
-def before_request():
-    g.user = current_user
+
+
     
 ###
 # Routing for your application.
 ###
-@app.route('/login', methods=['GET', 'POST'])
-@oid.loginhandler
+@lm.user_loader
+def user_loader(id):
+    """Given *user_id*, return the associated User object.
+
+    :param unicode user_id: user_id (email) user to retrieve
+    """
+    return myprofile.query.get(id)
+
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/api/user/login', methods=['POST'])
 def login():
-    if g.user is not None and g.user.is_authenticated():
-        return redirect(url_for('index'))
+    # Here we use a class of some kind to represent and validate our
+    # client-side form data. For example, WTForms is a library that will
+    # handle this for us, and we use a custom LoginForm to validate.
     form = LoginForm()
-    print app.config['OPENID_PROVIDERS']
-    if form.validate_on_submit():
-        session['remember_me'] = form.remember_me.data
-        return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
-    return render_template('login.html', 
-                           title='Sign In',
-                           form=form,
-                           providers=app.config['OPENID_PROVIDERS'])
-@app.route('/')
+    
+    error = None
+    if request.method == 'POST':
+        user_email = request.form['email']
+        user_pass = request.form['password']
+        
+        profile = myprofile.query.filter(myprofile.email == user_email).first()
+        
+        if profile.email != user_email or profile.password != user_pass:
+            error = 'Invalid Credentials. Please try again.'
+        else:
+            nowUser = profile.email
+            session['nowUser'] = nowUser
+            return redirect(url_for('home', nowUser=nowUser))
+    return render_template('login.html', form=form)
+    
+@app.route("/logout")
+
+def logout():
+    logout_user()
+    return render_template('logout.html')
+                           
+@app.route('/api/thumbnail/process')
 def home():
     """Render website's home page."""
-    return render_template('home.html')
+    nowUser = request.args['nowUser']  
+    nowUser = session['nowUser']
+    return render_template('home.html', nowUser = nowUser)
 
-@app.route('/profile/', methods=['POST','GET'])
+@app.route('/api/user/:id/wishlist', methods=['POST'])
+def showSubmit():
+    if request.method == "POST":
+        picList=[]
+        website = request.form['website']
+        
+        url = website
+        result = requests.get(url)
+        soup = BeautifulSoup(result.text, "html.parser")
+        picList = [];
+        image = "<img src='%s'>"
+        for img in soup.findAll("img", src=True):
+            if "sprite" not in img["src"]:
+                message = image % urlparse.urljoin(url, img["src"])
+                
+                
+                picList.append(message)
+    
+    
+        
+    
+    return render_template('thumb_action.html', website=website, picList=picList)
+
+
+        # return urlparse.urljoin(url, img["src"])    
+    
+    
+
+@app.route('/api/user/register', methods=['POST'])
 def profile_add():
     import os
     from flask import Flask, request, redirect, url_for
     from werkzeug import secure_filename
     if request.method == 'POST':
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-        sex = request.form['sex']
-        image = request.files['image']
-        high_score = ""
-        tdollars = ""
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
         
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
         
         # write the information to the database
-        newprofile = Myprofile(first_name=first_name,last_name=last_name,sex=sex, image=filename, high_score=high_score, tdollars=tdollars)
+        newprofile = myprofile(name=name,email=email,password=password)
         db.session.add(newprofile)
         db.session.commit()
 
-        return "{} {}, who is a {} was added to the database with image: {}".format(request.form['first_name'],request.form['last_name'],request.form['sex'], filename)
+        return "Name: {}, Email: {} was created".format(request.form['name'],request.form['email'])
 
     form = ProfileForm()
     return render_template('profile_add.html',form=form)
 
-@app.route('/profiles/',methods=["POST","GET"])
+@app.route('/profiles',methods=["POST","GET"])
+@login_required
 def profile_list():
     import json
-    profiles = Myprofile.query.all()
+    profiles = myprofile.query.all()
     if request.method == "GET":
         profList = str(profiles)
         
@@ -93,15 +151,15 @@ def profile_list():
 
 @app.route('/profile/<int:id>',methods=["POST","GET"])
 def profile_view(id):
-    profile = Myprofile.query.get(id)
+    profile = myprofile.query.get(id)
     if request.method == "GET":
         return jsonify({"data":"no instructions for GET"})
     if request.method == "POST":
-        return jsonify({"id":profile.id, "sex":profile.sex, "image":profile.image, "high_score":profile.high_score, "tdollars":profile.tdollars})
+        return jsonify({"id":profile.id, "email":profile.email})
     return render_template('profile_view.html',profile=profile)
 
 
-@app.route('/about/')
+@app.route('/about')
 def about():
     """Render the website's about page."""
     return render_template('about.html')

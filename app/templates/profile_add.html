@@ -8,18 +8,13 @@
 {% block main %}
 <form action="{{ url_for('profile_add') }}" method="post" name="profileForm" enctype=multipart/form-data>
 
-       first name: {{ form.first_name }}<br />
-       last name: {{ form.last_name }}<br />
-
-       Sex: <select name="sex"> 
-              <option value="male" selected>M</option>
-              <option value="female">F</option>
-       </select>
+       name: {{ form.name }}<br />
+       email: {{ form.email }}<br />
+       password: {{ form.password }}<br />
+       
        
 
-       <div>
-              Select an image:<input id="image" name="image" class="element text" type="file"/> 
-       </div> 
+       
 
        <input type="submit" />                
 

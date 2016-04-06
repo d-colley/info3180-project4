@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+}
+
+{% block css %}
+<style type="text/css">
+.result
+{
+   border: 5px solid #C3D8E4;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+
+
+<div id="content">
+    <strong>URL Submitted: {{website}}</strong>
+    <br/>
+    <h2>Please select a thumbnail:</h2>
+    <hr/>
+    <div class = "row">
+    {% for pic in picList %}
+        <div class="col-xs-3">
+            <a href="#" class="thumbnail">
+                {{ pic|safe }}
+            </a>
+        </div>
+    {% endfor %}
+    </div>
+    <div class = "row text-center">
+        <form action="" method="POST" name="voteSubmit">
+                <div><input name="chosenThumb" type="hidden" id="chosenThumb" value="" /></div>
+                <input class="btn btn-default" type="submit" value="choose">
+            </form>
+    </div>
+    
+    
+</div>
+<script type="text/javascript">
+    
+</script>
+{% endblock %}

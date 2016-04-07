@@ -87,7 +87,7 @@ def home():
     nowUser = session['nowUser']
     return render_template('home.html', nowUser = nowUser)
 
-@app.route('/api/user/:id/wishlist', methods=['POST'])
+@app.route('/api/user/:id/wishlist', methods=['POST','GET'])
 def showSubmit():
     if request.method == "POST":
         picList=[]
@@ -105,17 +105,25 @@ def showSubmit():
                 
                 picList.append(message)
     
-    
         
     
     return render_template('thumb_action.html', website=website, picList=picList)
-
-
-        # return urlparse.urljoin(url, img["src"])    
+    
+@app.route('/urladd', methods=['POST','GET'])    
+def urlAdd():
+    if request.method == "POST":
+          
+        nowUser = session['nowUser']
+        url_chosen = request.form['chosenThumb']
+        profile = myprofile.query.filter(myprofile.email == nowUser).first()
+        
+        profile.url = url_chosen
+        
+    return render_template('url_added.html', url_chosen=url_chosen)
     
     
 
-@app.route('/api/user/register', methods=['POST'])
+@app.route('/api/user/register', methods=['POST','GET'])
 def profile_add():
     import os
     from flask import Flask, request, redirect, url_for
@@ -128,7 +136,7 @@ def profile_add():
         
         
         # write the information to the database
-        newprofile = myprofile(name=name,email=email,password=password)
+        newprofile = myprofile(name=name,email=email,password=password, url = "")
         db.session.add(newprofile)
         db.session.commit()
 

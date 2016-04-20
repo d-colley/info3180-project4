@@ -23,7 +23,7 @@ It is assumed that you've installed the [heroku toolbelt](http://toolbelt.heroku
 Instructions
 ------------
 
-Clone the repo.
+Clone the repo
 
     git clone git@github.com:info3180/demo_user_app.git
     cd flask_app

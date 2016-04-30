@@ -7,7 +7,7 @@
 
 {% block main %}
 <form action="{{ url_for('profile_add') }}" method="post" name="profileForm" enctype=multipart/form-data>
-
+       <h2>Registration</h2>
        name: {{ form.name }}<br />
        email: {{ form.email }}<br />
        password: {{ form.password }}<br />

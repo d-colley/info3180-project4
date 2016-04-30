@@ -64,7 +64,9 @@ def login():
         user_email = request.form['email']
         user_pass = request.form['password']
         
+        
         profile = myprofile.query.filter(myprofile.email == user_email).first()
+        
         
         if profile.email != user_email or profile.password != user_pass:
             error = 'Invalid Credentials. Please try again.'
@@ -85,7 +87,8 @@ def home():
     """Render website's home page."""
     nowUser = request.args['nowUser']  
     nowUser = session['nowUser']
-    return render_template('home.html', nowUser = nowUser)
+    profile = myprofile.query.filter(myprofile.email == nowUser).first()
+    return render_template('home.html', nowUser = nowUser, profile=profile)
 
 @app.route('/api/user/:id/wishlist', methods=['POST','GET'])
 def showSubmit():
@@ -115,9 +118,13 @@ def urlAdd():
           
         nowUser = session['nowUser']
         url_chosen = request.form['chosenThumb']
-        profile = myprofile.query.filter(myprofile.email == nowUser).first()
+        profile = myprofile.query.filter(myprofile.email == nowUser).update({'url': str(url_chosen)})
+        #useremail = profile.email
+        #profile.url = url_chosen
         
-        profile.url = url_chosen
+        
+        #profile.url = str(url_chosen)
+        db.session.commit()
         
     return render_template('url_added.html', url_chosen=url_chosen)
     
@@ -146,7 +153,7 @@ def profile_add():
     return render_template('profile_add.html',form=form)
 
 @app.route('/profiles',methods=["POST","GET"])
-@login_required
+#@login_required
 def profile_list():
     import json
     profiles = myprofile.query.all()
@@ -163,7 +170,8 @@ def profile_view(id):
     if request.method == "GET":
         return jsonify({"data":"no instructions for GET"})
     if request.method == "POST":
-        return jsonify({"id":profile.id, "email":profile.email})
+        
+        return jsonify({"id":profile.id, "email":profile.email, "url":profile.url})
     return render_template('profile_view.html',profile=profile)
 
 

@@ -28,7 +28,8 @@ from bs4 import BeautifulSoup
 import urlparse
 import sys
 import json
-
+import smtplib
+import string
 
 class ProfileForm(Form):
      name = TextField('First Name', validators=[Required()])
@@ -81,12 +82,20 @@ def login():
 def logout():
     logout_user()
     return render_template('logout.html')
+    
+@app.route('/mail')
+def mail():
+    """Render the website's mail page."""
+    return render_template('share_page.html')
                            
-@app.route('/api/thumbnail/process')
+@app.route('/api/thumbnail/process', methods=['POST','GET'])
 def home():
     """Render website's home page."""
     nowUser = request.args['nowUser']  
     nowUser = session['nowUser']
+    
+    
+    
     profile = myprofile.query.filter(myprofile.email == nowUser).first()
     return render_template('home.html', nowUser = nowUser, profile=profile)
 
@@ -193,12 +202,14 @@ def send_text_file(file_name):
 
 
 @app.after_request
-def add_header(response):
+def add_header(response,methods=["POST","GET"]):
     """
     Add headers to both force latest IE rendering engine or Chrome Frame,
     and also to cache the rendered page for 10 minutes.
     """
+    
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+    response.headers['Authorization'] = 'Basic'
     response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 

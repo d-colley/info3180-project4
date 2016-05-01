@@ -386,33 +386,46 @@ app.controller("myCtrl", function($scope) {
     $scope.removeItem = function (x) {
         $scope.errortext = "";    
         $scope.products.splice(x, 1);
+        
     }
+    
 });
+
+
+
+
 </script>
+
 
 <div ng-app="myShoppingList" ng-cloak ng-controller="myCtrl" class="w3-card-2 w3-margin" style="max-width:400px;">
   <header class="w3-container w3-light-grey w3-padding-hor-16">
     <h3>Mailing List</h3>
   </header>
   {% raw %}
-  <ul class="w3-ul">
+  <ul class="w3-ul" id="eList">
     <li ng-repeat="x in products" class="w3-padding-hor-16" id="recipient">{{x}}<span ng-click="removeItem($index)" style="cursor:pointer;" class="w3-right w3-margin-right">×</span></li>
   </ul>
   {% endraw %}
   <div class="w3-container w3-light-grey w3-padding-hor-16">
     <div class="w3-row w3-margin-top">
       <div class="w3-col s10">
-        <input placeholder="E-mail" ng-model="addMe" class="w3-input w3-border w3-padding">
+        <input placeholder="E-mail" ng-model="addMe" class="w3-input w3-border w3-padding" id="emailBox">
       </div>
       <div class="w3-col s2">
-        <button ng-click="addItem()" class="w3-btn w3-padding w3-green">Add</button>
+        <button ng-click="addItem()" class="w3-btn w3-padding w3-green" id="addBtn">Add</button>
       </div>
     </div>
-    <div class="w3-col s2">
-        <button ng-click="" class="w3-btn w3-padding"style="
-    margin-top: 20px;
-">Send</button>
-      </div>
+    
+    <form action="{{ url_for('sendmail') }}" method="post" name="profileForm" enctype=multipart/form-data>
+      <input type="hidden" name="choices" value="" id ="ghostDiv">
+       
+
+       
+
+       <input type="submit" value="Send" />                
+
+</form>
+    
     {% raw %}
     <p class="w3-padding-left w3-text-red">{{errortext}}</p>
     {% endraw %}
@@ -424,6 +437,60 @@ app.controller("myCtrl", function($scope) {
 <script type="text/javascript">
     var name = localStorage.setItem('nowUser', "{{nowUser}}");
     console.log(name);
+</script>
+
+<script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  var emails = [];
+  $( "#addBtn" ).click(function() {
+    
+    var frame = document.getElementById("ul");
+    var listItem = $("li:visible[id*='recipient']");
+    //var listLength = $("li").length;
+    
+    var new_email = $('#emailBox').val();
+    emails.push(new_email);
+    console.log("works:" + emails);
+    
+    
+    localStorage.setItem("emailList", JSON.stringify(emails));
+    
+    $("#ghostDiv").val(JSON.parse(localStorage.getItem('emailList')))
+
+    
+    // var test = $('#eList li:nth-child(2)').text();
+    // var correct_test = test.slice(0, -1);
+    // console.log(listLength);
+    // console.log(correct_test);
+  });
+  
+  
+  $( "#emailSend" ).click(function() {
+    
+  
+    
+    var frame = document.getElementById("ul");
+    var listItem = $("li:visible[id*='recipient']");
+    //var listLength = $("li").length;
+    var emails = [];
+    
+    for (var i=0; i < listItem.length; i++) 
+    {
+      emails.push($(listItem[i]).text().slice(0, -1));
+      console.log("works:" + emails[i]);
+    }
+    
+    localStorage.setItem("emailList", JSON.stringify(emails));
+    
+    
+
+    
+    // var test = $('#eList li:nth-child(2)').text();
+    // var correct_test = test.slice(0, -1);
+    // console.log(listLength);
+    // console.log(correct_test);
+  });
 </script>
 
 

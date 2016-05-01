@@ -87,6 +87,50 @@ def logout():
 def mail():
     """Render the website's mail page."""
     return render_template('share_page.html')
+    
+@app.route('/sendmail', methods=['GET', 'POST'])
+def sendmail():
+    test = request.form['choices']
+    test1 = test[1:-1]
+    testnew = test1.replace('"','')
+    
+    test3 = testnew.split(",")
+    #test2 = test3[1]
+    
+    for i in test3:
+        import smtplib
+        import string
+        
+        fromname = 'david.g.colley123@gmail.com'
+        fromaddr = 'david.g.colley123@gmail.com'
+        toname = 'Share Recipient'
+        toaddr = i
+        subject = 'Sharing my wishlist'
+        msg = 'http://info3180-project4-shinobyrts.c9users.io/api/thumbnail/process?nowUser=david.g.colley123%40gmail.com'
+        
+        # Create the message
+        BODY = string.join((
+            "From: %s" % fromaddr,
+            "To: %s" % toaddr,
+            "Subject: %s" % subject ,
+            "",
+            msg
+            ), "\r\n")
+            
+        # Credentials (if needed)
+    
+        username = 'david.g.colley123@gmail.com'
+    
+        password = 'pcxqkwguelokjvkl'
+    
+        # The actual mail send
+        server = smtplib.SMTP('smtp.gmail.com:587')
+        server.starttls()
+        server.login(username,password)
+        server.sendmail(fromaddr, [toaddr], BODY)
+        server.quit()
+            
+    return render_template('mailSuccess.html', emails=test3)
                            
 @app.route('/api/thumbnail/process', methods=['POST','GET'])
 def home():

@@ -30,6 +30,7 @@ import sys
 import json
 import smtplib
 import string
+import hashlib
 
 class ProfileForm(Form):
      name = TextField('First Name', validators=[Required()])
@@ -72,9 +73,13 @@ def login():
         if profile.email != user_email or profile.password != user_pass:
             error = 'Invalid Credentials. Please try again.'
         else:
+            userString = user_email + " " + user_pass
+            hash_object = hashlib.md5(userString)
             nowUser = profile.email
             session['nowUser'] = nowUser
-            return redirect(url_for('home', nowUser=nowUser))
+            response = app.make_response(redirect(url_for('home', nowUser=nowUser)))
+            response.headers['Authorization'] = 'Basic' + " " + (hash_object.hexdigest())
+            return response
     return render_template('login.html', form=form)
     
 @app.route("/logout")
@@ -137,6 +142,7 @@ def home():
     """Render website's home page."""
     nowUser = request.args['nowUser']  
     nowUser = session['nowUser']
+    
     
     
     
@@ -245,17 +251,16 @@ def send_text_file(file_name):
     return app.send_static_file(file_dot_text)
 
 
-@app.after_request
-def add_header(response,methods=["POST","GET"]):
-    """
-    Add headers to both force latest IE rendering engine or Chrome Frame,
-    and also to cache the rendered page for 10 minutes.
-    """
+# @app.after_request
+# def add_header(response,methods=["POST","GET"]):
+#     """
+#     Add headers to both force latest IE rendering engine or Chrome Frame,
+#     and also to cache the rendered page for 10 minutes.
+#     """
     
-    response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
-    response.headers['Authorization'] = 'Basic'
-    response.headers['Cache-Control'] = 'public, max-age=600'
-    return response
+#     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
+#     response.headers['Cache-Control'] = 'public, max-age=600'
+#     return response
 
 
 @app.errorhandler(404)
